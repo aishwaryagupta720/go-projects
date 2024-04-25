@@ -12,6 +12,26 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
+type JSON struct {
+	Key   string `json:"key"`
+	Value string `json:"value"`
+}
+
+// This represents a single hyperlink.
+type HATEOAS struct {
+	Rel    string `json:"rel"`
+	Href   string `json:"href"`
+	Method string `json:"method"`
+	Header []JSON `json:"header"`
+	Body   []JSON `json:"body"`
+}
+
+// This wraps a data payload with HATEOAS links.
+type Resource struct {
+	ResponseData interface{} `json:"response"`
+	HyperLinks   []HATEOAS   `json:"links"`
+}
+
 // GetLink is the function called when a user makes a request to retrieve a certain link
 func (s *serverImpl) GetLink(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// ps are the parameters attached to this route. the paramter to ByName()
@@ -35,8 +55,29 @@ func (s *serverImpl) GetLink(w http.ResponseWriter, r *http.Request, ps httprout
 
 	// return a 302 to redirect users
 	fmt.Printf("GetLink: found link for linkId=%s, redirecting to url=%s", link.Id, link.Url)
-	w.Header().Add("Location", link.Url) // the location header is the destination URL
-	w.WriteHeader(302)                   // 302 informs the client to read the Location header for a redirection
+
+	// w.Header().Add("Location", link.Url) // the location header is the destination URL
+	// w.WriteHeader(302)                   // 302 informs the client to read the Location header for a redirection
+
+	resource := Resource{
+		ResponseData: link,
+		HyperLinks: []HATEOAS{
+			{"self", "/l/" + linkId, "GET", []JSON{}, []JSON{}},
+			{"getUserLinks", "/userlinks", "GET", []JSON{{Key: "user", Value: link.Owner}}, []JSON{}},
+			{"createLinks", "/api/links", "POST", []JSON{{Key: "content-type", Value: "application/json"}}, []JSON{{Key: "url", Value: "{webpage-url}"}, {Key: "owner", Value: link.Owner}}},
+			{"deleteUserLinks", "/api/delete/" + link.Owner + "/" + linkId, "DELETE", []JSON{}, []JSON{}},
+		},
+	}
+
+	jsonbody, err := json.Marshal(resource)
+	if err != nil {
+		// If encoding fails send an HTTP 500 Internal Server Error.
+		w.WriteHeader(500)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonbody)
+
 }
 
 // createLinkParams represents the structure of the request body to
@@ -112,8 +153,27 @@ func (s *serverImpl) CreateLink(w http.ResponseWriter, r *http.Request, _ httpro
 	}
 
 	// redirect users
-	w.Header().Add("Location", fmt.Sprintf("/public?link=%s", link.Id))
-	w.WriteHeader(303)
+	// w.Header().Add("Location", fmt.Sprintf("/public?link=%s", link.Id))
+	// w.WriteHeader(303)
+
+	resource := Resource{
+		ResponseData: link,
+		HyperLinks: []HATEOAS{
+			{"self", "/api/links", "POST", []JSON{{Key: "content-type", Value: "application/json"}}, []JSON{{Key: "url", Value: "{webpage-url}"}, {Key: "owner", Value: link.Owner}}},
+			{"getLink", "/l/" + link.Id, "GET", []JSON{}, []JSON{}},
+			{"getUserLinks", "/userlinks", "GET", []JSON{{Key: "user", Value: link.Owner}}, []JSON{}},
+			{"deleteUserLinks", "/api/delete/" + link.Owner + "/" + link.Id, "DELETE", []JSON{}, []JSON{}},
+		},
+	}
+	jsonbody, err := json.Marshal(resource)
+	if err != nil {
+		// If encoding fails send an HTTP 500 Internal Server Error.
+		w.WriteHeader(500)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonbody)
+
 }
 
 // getUserLinksParams represents the structure of the request body to

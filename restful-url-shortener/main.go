@@ -30,7 +30,7 @@ func main() {
 	router.GET("/l/:link", server.GetLink)
 	router.GET("/userlinks", server.GetUserLinks)
 	router.POST("/api/links", server.CreateLink)
-	router.POST("/api/deletelink", server.DeleteLink)
+	router.DELETE("/api/delete/:user/:link", server.DeleteLink)
 
 	// serve all files from the directory specified (from command line arguments)
 	router.ServeFiles("/public/*filepath", http.Dir(*directory))

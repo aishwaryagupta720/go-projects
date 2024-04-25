@@ -164,5 +164,23 @@ func (s *serverImpl) GetUserLinks(w http.ResponseWriter, r *http.Request, _ http
 
 }
 func (s *serverImpl) DeleteLink(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	w.Write([]byte("DeleteLink"))
+
+	linkId := ps.ByName("link")
+	owner := ps.ByName("user")
+
+	if linkId == "" || owner == "" {
+		fmt.Println("DeleteLink: no link or user provided")
+		w.WriteHeader(400)
+		return
+	}
+
+	err := s.linkStore.DeleteLink(linkId, owner)
+
+	if errors.Is(err, &datastore.NotFoundError{}) {
+		fmt.Printf("DeleteLink: No Links were deleted")
+		w.Write([]byte("No Links were deleted"))
+		return
+	}
+
+	w.Write([]byte("Delete Link Completed"))
 }

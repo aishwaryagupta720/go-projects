@@ -26,3 +26,11 @@ errors.
 
 - You should only need to changethe existing code to complete the HATEOAS portion of the assignment. But you should be able to understand the existing code sicne it'll help in completing the other tasks. 
 - You should not need to update the front end portion, but if you run the server and connect to the front end, the CreateLink should already be working. So if you'd like to create multiple links from there, feel free. 
+
+
+## REST Endpoints 
+
+GET http://localhost:8080//l/{linkId}
+GET http://localhost:8080/userlinks Header { "user" : {username}}
+POST http://localhost:8080/api/links Header { "content-type" : application/json } BODY { "url" : {url-to-be-shortened}, "user" : {username}}
+DELETE http://localhost:8080/api/delete/{username}/{linkId}

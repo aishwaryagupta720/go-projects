@@ -116,10 +116,52 @@ func (s *serverImpl) CreateLink(w http.ResponseWriter, r *http.Request, _ httpro
 	w.WriteHeader(303)
 }
 
+// getUserLinksParams represents the structure of the request body to
+// a getUserLinks function call
+type getUserLinksParams struct {
+	URLs  []string `json:"urls"`
+	Owner string   `json:"owner"`
+}
+
 // read a header / body to get a user
 // return a list of links in json format where Owner == user passed in
 func (s *serverImpl) GetUserLinks(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-	w.Write([]byte("GetUserLinks"))
+
+	user := r.Header.Get("User")
+
+	if user == "" {
+		fmt.Println("GetUserLinks: no user provided")
+		w.WriteHeader(400)
+		return
+	}
+
+	links, err := s.linkStore.GetUserLinks(user)
+
+	if errors.Is(err, &datastore.NotFoundError{}) {
+		fmt.Printf("GetUserLinks: No user found by name =%s\n", user)
+		w.WriteHeader(204)
+		return
+	}
+
+	// Extract URLs from each link in the array
+	var urls []string
+	for _, link := range links {
+		urls = append(urls, link.Url)
+	}
+	fmt.Printf("GetUserLinks: found links for user=%s is %v ", user, urls)
+	//  Json encode the body
+	jsonbody, err := json.Marshal(getUserLinksParams{
+		URLs:  urls,
+		Owner: user,
+	})
+	if err != nil {
+		// If encoding fails send an HTTP 500 Internal Server Error.
+		w.WriteHeader(500)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(jsonbody))
+
 }
 func (s *serverImpl) DeleteLink(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.Write([]byte("DeleteLink"))

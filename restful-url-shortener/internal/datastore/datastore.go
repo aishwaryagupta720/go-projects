@@ -19,7 +19,7 @@ type Link struct {
 // a struct must fulfill to be considered a LinkStorer
 type LinkStorer interface {
 	GetLink(id string) (*Link, error)
-	GetUserLinks(user string) []Link
+	GetUserLinks(user string) ([]Link, error)
 	CreateLink(url string, owner string) (*Link, error)
 	DeleteLink(url string, user string) error
 }

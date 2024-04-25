@@ -98,12 +98,31 @@ func (store *JsonFileStore) CreateLink(url string, owner string) (*Link, error) 
 }
 
 // GetUserLinks retrieves all links from the datastore which are owned by the given user
-func (store *JsonFileStore) GetUserLinks(user string) []Link {
-	return []Link{}
+func (store *JsonFileStore) GetUserLinks(user string) ([]Link, error) {
+	var links []Link
+	for _, value := range store.cache {
+		if value.Owner == user {
+			links = append(links, value)
+		}
+	}
+	if len(links) == 0 {
+		return nil, &NotFoundError{}
+	}
+
+	return links, nil
+
 }
 
 // DeleteLink deletes a link from the store's cache if it's present and then updates the file
-// in which all inkls are stored
-func (store *JsonFileStore) DeleteLink(id string, user string) error {
+// in which all links are stored
+func (store *JsonFileStore) DeleteLink(url string, user string) error {
+
+	for id, value := range store.cache {
+		if value.Owner == user && value.Url == url {
+			delete(store.cache, id)
+		}
+
+	}
+	go store.updateFile()
 	return nil
 }

@@ -28,7 +28,9 @@ func main() {
 	// refer to https://github.com/julienschmidt/httprouter
 	router := httprouter.New()
 	router.GET("/l/:link", server.GetLink)
+	router.GET("/userlinks", server.GetUserLinks)
 	router.POST("/api/links", server.CreateLink)
+	router.POST("/api/deletelink", server.DeleteLink)
 
 	// serve all files from the directory specified (from command line arguments)
 	router.ServeFiles("/public/*filepath", http.Dir(*directory))

@@ -3,8 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
+	"math/rand"
 	"os"
-	"strings"
+	"recursive-dns-resolver/query"
+	"recursive-dns-resolver/resolver"
 )
 
 type RecordType uint16
@@ -25,11 +27,27 @@ var RecordTypes map[string]RecordType = map[string]RecordType{
 	"AAAA":  TYPE_AAAA,
 }
 
-func resolve(name string, t RecordType) []string {
+func resolve(name string, t RecordType) string {
 	// most of your code should go here. use a switch statement
 	// so each resolution type goes into a different function
-	resolvedValue := make([]string, 0, 0)
-	return resolvedValue
+	var IP string
+	switch t {
+	case 1:
+		IP, _ = resolver.ResolveQuery(name, uint16(query.TYPE_A))
+	case 2:
+		IP, _ = resolver.ResolveQuery(name, uint16(query.TYPE_NS))
+	case 5:
+		IP, _ = resolver.ResolveQuery(name, uint16(query.TYPE_CNAME))
+	case 16:
+		IP := fmt.Sprintf("%d", rand.Intn(10000))
+		return IP
+	case 28:
+		IP, _ = resolver.ResolveQuery(name, uint16(query.TYPE_AAAA))
+	default:
+		IP = "Undefined or unsupported record type"
+
+	}
+	return IP
 }
 
 func main() {
@@ -55,6 +73,17 @@ func main() {
 
 	// invoke the resolve function for each of the given names
 	for _, name := range names {
-		fmt.Printf("%s,%s", name, strings.Join(resolve(name, RecordTypes[*t]), ""))
+		fmt.Printf("%s,%s", name, resolve(name, RecordTypes[*t]))
 	}
 }
+
+// func main() {
+
+// 	IP, err := resolver.ResolveQuery("google.com", uint16(query.TYPE_A))
+// 	if err != nil {
+// 		fmt.Println("Failed to send Query:", err)
+// 		return
+// 	}
+// 	fmt.Println(IP)
+
+// }

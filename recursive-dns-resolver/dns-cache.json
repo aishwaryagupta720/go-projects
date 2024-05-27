@@ -1,0 +1,12 @@
+{
+  "www.facebook.com": {
+    "Domain": "www.facebook.com",
+    "IPAddress": "",
+    "ExpiresAt": "2024-05-17T00:58:42.027681-07:00"
+  },
+  "www.google.com": {
+    "Domain": "www.google.com",
+    "IPAddress": "142.250.191.36",
+    "ExpiresAt": "2024-05-17T00:01:27.949523-07:00"
+  }
+}
